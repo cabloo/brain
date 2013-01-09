@@ -1,6 +1,7 @@
 import scala.collection.mutable.ArrayBuffer
 import scala.math.random
 import scala.math.exp
+import scala.math.abs
 
 class Neuron(var weights: Array[Double]) {
   var last_inputs: Array[Double] = new Array[Double](0)
@@ -31,7 +32,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
   var expected_outputs = Array[Double]()
   val count_layers = neurons_per_layer.length
   var layers = new Array[NeuronLayer](count_layers)
-  val learning_rate = .25
+  var learning_rate = .25
   var error_sum = 0.0
   //Build the network
 
@@ -74,13 +75,31 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 
   def parse() {
 	val current_outputs = get_output( inputs )
-
 	error_sum = 0.0
-
+	
 	for( i <- 0 to current_outputs.length - 1 ){
-	  error_sum += expected_outputs(i) - current_outputs(i)
+          val error = expected_outputs(i) - current_outputs(i)
+          error_sum += error
+          if( abs(error) > .0005 ) {
+          	for( l <- (1 to count_layers - 1).reverse ){
+                  val neurons = layers(l).neurons
+                  for( n <- 0 to neurons.length - 1 ){
+                	if( !( l == count_layers - 1 && n != i ) ){
+                  	  val neuron = neurons(n)
+                  	  for( bond <- 0 to neuron.last_inputs.length - 1 ){
+                          	layers(l).neurons(n).weights(bond) += learning_rate * error_sum * neuron.last_inputs(bond) * neuron.output * 
+( 1 - neuron.output )
+                  	  }
+                  	  layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
+		  	}
+          	  }
+		}
+          }
+        }
+/*	for( i <- 0 to current_outputs.length - 1 ){
+	  error_sum = expected_outputs(i) - current_outputs(i)
 	}
-
+	
 	for( l <- (1 to count_layers - 1).reverse ){
 	  val neurons = layers(l).neurons
 	  for( n <- 0 to neurons.length - 1 ){
@@ -90,8 +109,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 		}
 		layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
 	  }
-	}
-
+	}*/
 	println( "Error: " + error_sum )
   }
 
