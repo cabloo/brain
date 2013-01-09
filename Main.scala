@@ -26,7 +26,9 @@ class NeuronLayer {
   }
 }
 
-class NeuralNetwork(var inputs: Array[Double],neurons_per_layer: Array[Int],var expected_outputs: Array[Double]) {
+class NeuralNetwork(neurons_per_layer: Array[Int]) {
+  var inputs = Array[Double]()
+  var expected_outputs = Array[Double]()
   val count_layers = neurons_per_layer.length
   var layers = new Array[NeuronLayer](count_layers)
   val learning_rate = .25
@@ -93,5 +95,11 @@ class NeuralNetwork(var inputs: Array[Double],neurons_per_layer: Array[Int],var 
 	println( "Error: " + error_sum )
   }
 
-  parse()
+  def train(times: Int, in_out: Map[Array[Double],Array[Double]]) {
+	for( i <- 0 to times - 1 ) {
+	  for( (k,v) <- in_out ) {
+		parse( k, v )
+	  }
+	}
+  }
 }
