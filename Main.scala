@@ -32,7 +32,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
   var expected_outputs = Array[Double]()
   val count_layers = neurons_per_layer.length
   var layers = new Array[NeuronLayer](count_layers)
-  var learning_rate = .25
+  var learning_rate = .3
   var error_sum = 0.0
   //Build the network
 
@@ -77,7 +77,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 	val current_outputs = get_output( inputs )
 	error_sum = 0.0
 	
-	for( i <- 0 to current_outputs.length - 1 ){
+	/*for( i <- 0 to current_outputs.length - 1 ){
           val error = expected_outputs(i) - current_outputs(i)
           error_sum += error
           if( abs(error) > .0005 ) {
@@ -95,8 +95,8 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
           	  }
 		}
           }
-        }
-/*	for( i <- 0 to current_outputs.length - 1 ){
+        }*/
+	for( i <- 0 to current_outputs.length - 1 ){
 	  error_sum = expected_outputs(i) - current_outputs(i)
 	}
 	
@@ -109,7 +109,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 		}
 		layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
 	  }
-	}*/
+	}
 	println( "Error: " + error_sum )
   }
 
@@ -119,5 +119,40 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 		parse( k, v )
 	  }
 	}
+  }
+
+  def truth_table() {
+	val n = neurons_per_layer(0)
+	val o = neurons_per_layer(neurons_per_layer.length - 1)
+	
+	println( "_" * (n * 2 + o * 3 + 1) )
+	print( "|" )
+	for( i <- 0 to n - 1 ) {
+	  print( i + "|" )
+	}
+	
+	for( i <- 0 to o - 1 ) {
+	  print( "O" + i + "|" )
+	}
+	print( "\n" )
+	
+	for( r <- 0 to 2^n - 1 ) {
+	  val bin = (("%" + n + "s") format r.toBinaryString).replace(' ', '0')
+	  var in = new Array[Double](n)
+
+	  for( i <- 0 to n - 1 ) {
+		in(i) = Integer.parseInt("" + bin(i),10).toDouble
+		print( "|" + bin(i) )
+	  }
+
+	  val out = get_output( in )
+	  for( i <- 0 to out.length - 1 ) {
+		print( "|" + (("%" + (i.toString.length + 1) + "s") format out( i ).round) )
+	  }
+
+	  print( "|\n" )
+	}
+	
+	println( "-" * (n * 2 + o * 3 + 1) )
   }
 }
