@@ -77,7 +77,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 	val current_outputs = get_output( inputs )
 	error_sum = 0.0
 	
-	/*for( i <- 0 to current_outputs.length - 1 ){
+	for( i <- 0 to current_outputs.length - 1 ){
           val error = expected_outputs(i) - current_outputs(i)
           error_sum += error
           if( abs(error) > .0005 ) {
@@ -95,8 +95,8 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
           	  }
 		}
           }
-        }*/
-	for( i <- 0 to current_outputs.length - 1 ){
+        }
+	/*for( i <- 0 to current_outputs.length - 1 ){
 	  error_sum = expected_outputs(i) - current_outputs(i)
 	}
 	
@@ -109,7 +109,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 		}
 		layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
 	  }
-	}
+	}*/
 	println( "Error: " + error_sum )
   }
 
