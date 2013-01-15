@@ -23,13 +23,13 @@ function NeuronLayer(){
 	}
 }
 
-function NeuralNetwork(neurons_per_layers){
+function NeuralNetwork(neurons_per_layer){
 	this.count_layers = neurons_per_layer.length
 	this.layers = new Array(this.count_layers)
-	this.learning_rate = .4
+	this.learning_rate = .5
 	this.error_sum = 0.0
-	this.inputs = []
-	this.expected_outputs = []
+	this.inputs = new Array(0)
+	this.expected_outputs = new Array(0)
 
 	for( var i = 0; i < this.count_layers; i++ ){
 		this.layers[i] = new NeuronLayer()
@@ -92,45 +92,65 @@ function NeuralNetwork(neurons_per_layers){
 	}
 	
 	this.train = function(times, arr){
-		for( var i = 0; i < times - 1; i++ ) {
-			for( var io in arr ) {
-				this.parse_other( io[0], io[1] )
+		for( var i = 0; i < times; i++ ) {
+			for( var j = 0; j < arr.length; j++ ) {
+				this.parse_other( arr[j][0], arr[j][1] )
 			}
 		}
 	}
 }
 
 function check_ocr() {
-	for( var i = 0; i < networks.length - 1; i++ ) {
-		console.log(networks[i].get_output(active_boxes))
+	var highest = 0
+	var highest_id = 0
+	for( var i = 0; i < networks.length; i++ ) {
+		var out = networks[i].get_output(active_boxes)
+		if( out > highest ) {
+			highest = out
+			highest_id = i
+		}
 	}
+	console.log( highest_id + " (" + (highest*100) + "%)" )
 }
 
 var zero_1 = [0,1,1,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,1,1,0]
+var one_1 = [0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0]
 var two_1 = [0,1,1,1,0,0,0,0,1,0,0,1,1,1,0,0,1,0,0,0,0,1,1,1,0]
 var three_1 = [0,1,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,0,1,0,0,1,1,1,0]
 var four_1 = [0,1,0,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,1,0,0,0,0,1,0]
+var five_1 = [0,1,1,1,0,0,1,0,0,0,0,1,1,1,0,0,0,0,1,0,0,1,1,1,0]
+var six_1 = [0,1,1,1,0,0,1,0,0,0,0,1,1,1,0,0,1,0,1,0,0,1,1,1,0]
+var seven_1 = [0,1,1,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0]
+var eight_1 = [0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,1,0,1,0,0,1,1,1,0]
+var nine_1 = [0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,1,0,0,0,0,1,0]
 
-var networks = new Array(4)
-for( var i = 0; i < networks.length - 1; i++ ) {
-	networks[i] = new NeuralNetwork([25,5,5,1])
+var networks = new Array(10)
+for( var i = 0; i < networks.length; i++ ) {
+	networks[i] = new NeuralNetwork([25,5,4,1])
 }
 
-networks[0].train(1000,[[zero_1,1],[two_1,0],[three_1,0],[four_1,0]])
-networks[1].train(1000,[[zero_1,0],[two_1,1],[three_1,0],[four_1,0]])
-networks[2].train(1000,[[zero_1,0],[two_1,0],[three_1,1],[four_1,0]])
-networks[3].train(1000,[[zero_1,0],[two_1,0],[three_1,0],[four_1,1]])
-
-var active_boxes = new Array(boxes.length)
-for( var i = 0; i < active_boxes.length - 1; i++ ) {
-	active_boxes[i] = 0
-}
+networks[0].train(1000,[[zero_1,[1]],[one_1,[0]],[two_1,[0]],[three_1,[0]],[four_1,[0]],[five_1,[0]],[six_1,[0]],[seven_1,[0]],[eight_1,[0]],[nine_1,[0]]])
+networks[1].train(1000,[[zero_1,[0]],[one_1,[1]],[two_1,[1]],[three_1,[0]],[four_1,[0]],[five_1,[0]],[six_1,[0]],[seven_1,[0]],[eight_1,[0]],[nine_1,[0]]])
+networks[2].train(1000,[[zero_1,[0]],[one_1,[0]],[two_1,[1]],[three_1,[0]],[four_1,[0]],[five_1,[0]],[six_1,[0]],[seven_1,[0]],[eight_1,[0]],[nine_1,[0]]])
+networks[3].train(1000,[[zero_1,[0]],[one_1,[0]],[two_1,[0]],[three_1,[1]],[four_1,[0]],[five_1,[0]],[six_1,[0]],[seven_1,[0]],[eight_1,[0]],[nine_1,[0]]])
+networks[4].train(1000,[[zero_1,[0]],[one_1,[0]],[two_1,[0]],[three_1,[0]],[four_1,[1]],[five_1,[0]],[six_1,[0]],[seven_1,[0]],[eight_1,[0]],[nine_1,[0]]])
+networks[5].train(1000,[[zero_1,[0]],[one_1,[0]],[two_1,[0]],[three_1,[0]],[four_1,[0]],[five_1,[1]],[six_1,[0]],[seven_1,[0]],[eight_1,[0]],[nine_1,[0]]])
+networks[6].train(1000,[[zero_1,[0]],[one_1,[0]],[two_1,[0]],[three_1,[0]],[four_1,[0]],[five_1,[0]],[six_1,[1]],[seven_1,[0]],[eight_1,[0]],[nine_1,[0]]])
+networks[7].train(1000,[[zero_1,[0]],[one_1,[0]],[two_1,[0]],[three_1,[0]],[four_1,[0]],[five_1,[0]],[six_1,[0]],[seven_1,[1]],[eight_1,[0]],[nine_1,[0]]])
+networks[8].train(1000,[[zero_1,[0]],[one_1,[0]],[two_1,[0]],[three_1,[0]],[four_1,[0]],[five_1,[0]],[six_1,[0]],[seven_1,[0]],[eight_1,[1]],[nine_1,[0]]])
+networks[9].train(1000,[[zero_1,[0]],[one_1,[0]],[two_1,[0]],[three_1,[0]],[four_1,[0]],[five_1,[0]],[six_1,[0]],[seven_1,[0]],[eight_1,[0]],[nine_1,[1]]])
 
 var boxes = document.getElementsByTagName("a");
-for( var i = 0; i < boxes.length - 1; i++ ){
+for( var i = 0; i < boxes.length; i++ ){
+	boxes[i].index = i;
 	boxes[i].addEventListener("click", function(){
 		this.className = this.className == "active" ? "" : "active"
-		active_boxes[i] = this.className == "active" ? 1 : 0
+		active_boxes[this.index] = this.className == "active" ? 1 : 0
 		check_ocr(active_boxes)
 	}, false)
+}
+
+var active_boxes = new Array(boxes.length)
+for( var i = 0; i < active_boxes.length; i++ ) {
+	active_boxes[i] = 0
 }
