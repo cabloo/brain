@@ -1,8 +1,3 @@
-var boxes = document.getElementsByTagName("a");
-for( var i = 0; i < boxes.length - 1; i++ ){
-	boxes[i].addEventListener("click", function(){this.className=this.className=="active"?"":"active"}, false)
-}
-
 function Neuron(weights){
 	this.weights = weights
 	this.last_inputs = new Array(0)
@@ -28,13 +23,13 @@ function NeuronLayer(){
 	}
 }
 
-function NeuralNetwork(inputs, neurons_per_layer, expected_outputs){
+function NeuralNetwork(neurons_per_layers){
 	this.count_layers = neurons_per_layer.length
 	this.layers = new Array(this.count_layers)
-	this.learning_rate = .5
+	this.learning_rate = .4
 	this.error_sum = 0.0
-	this.inputs = inputs
-	this.expected_outputs = expected_outputs
+	this.inputs = []
+	this.expected_outputs = []
 
 	for( var i = 0; i < this.count_layers; i++ ){
 		this.layers[i] = new NeuronLayer()
@@ -95,6 +90,47 @@ function NeuralNetwork(inputs, neurons_per_layer, expected_outputs){
 
 		return current_outputs
 	}
+	
+	this.train = function(times, arr){
+		for( var i = 0; i < times - 1; i++ ) {
+			for( var io in arr ) {
+				this.parse_other( io[0], io[1] )
+			}
+		}
+	}
+}
 
-	this.parse()
+function check_ocr() {
+	for( var i = 0; i < networks.length - 1; i++ ) {
+		console.log(networks[i].get_output(active_boxes))
+	}
+}
+
+var zero_1 = [0,1,1,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,1,1,0]
+var two_1 = [0,1,1,1,0,0,0,0,1,0,0,1,1,1,0,0,1,0,0,0,0,1,1,1,0]
+var three_1 = [0,1,1,1,0,0,0,0,1,0,0,1,1,1,0,0,0,0,1,0,0,1,1,1,0]
+var four_1 = [0,1,0,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,1,0,0,0,0,1,0]
+
+var networks = new Array(4)
+for( var i = 0; i < networks.length - 1; i++ ) {
+	networks[i] = new NeuralNetwork([25,5,5,1])
+}
+
+networks[0].train(1000,[[zero_1,1],[two_1,0],[three_1,0],[four_1,0]])
+networks[1].train(1000,[[zero_1,0],[two_1,1],[three_1,0],[four_1,0]])
+networks[2].train(1000,[[zero_1,0],[two_1,0],[three_1,1],[four_1,0]])
+networks[3].train(1000,[[zero_1,0],[two_1,0],[three_1,0],[four_1,1]])
+
+var active_boxes = new Array(boxes.length)
+for( var i = 0; i < active_boxes.length - 1; i++ ) {
+	active_boxes[i] = 0
+}
+
+var boxes = document.getElementsByTagName("a");
+for( var i = 0; i < boxes.length - 1; i++ ){
+	boxes[i].addEventListener("click", function(){
+		this.className = this.className == "active" ? "" : "active"
+		active_boxes[i] = this.className == "active" ? 1 : 0
+		check_ocr(active_boxes)
+	}, false)
 }
