@@ -126,7 +126,7 @@ var nine_1 = [0,1,1,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,1,0,0,0,0,1,0]
 
 var networks = new Array(10)
 for( var i = 0; i < networks.length; i++ ) {
-	networks[i] = new NeuralNetwork([25,5,4,1])
+	networks[i] = new NeuralNetwork([25,10,10,1])
 }
 
 networks[0].train(1000,[[zero_1,[1]],[one_1,[0]],[two_1,[0]],[three_1,[0]],[four_1,[0]],[five_1,[0]],[six_1,[0]],[seven_1,[0]],[eight_1,[0]],[nine_1,[0]]])
