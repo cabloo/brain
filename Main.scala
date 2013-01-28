@@ -51,7 +51,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 	}
   }
 
-  def parse(in: Array[Double], out: Array[Double]) {
+  def parse(in: Array[Double], out: Array[Double]): Double = {
 	inputs = in
 	expected_outputs = out
 	parse
@@ -73,33 +73,33 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 	current_outputs
   }
 
-  def parse() {
+  def parse(): Double = {
 	val current_outputs = get_output( inputs )
 	error_sum = 0.0
-	
+
 	for( i <- 0 to current_outputs.length - 1 ){
-          val error = expected_outputs(i) - current_outputs(i)
-          error_sum += error
-          if( abs(error) > .0005 ) {
-          	for( l <- (1 to count_layers - 1).reverse ){
-                  val neurons = layers(l).neurons
-                  for( n <- 0 to neurons.length - 1 ){
-                	if( !( l == count_layers - 1 && n != i ) ){
-                  	  val neuron = neurons(n)
-                  	  for( bond <- 0 to neuron.last_inputs.length - 1 ){
-                          	layers(l).neurons(n).weights(bond) += learning_rate * error_sum * neuron.last_inputs(bond) * neuron.output * 
+	  val error = expected_outputs(i) - current_outputs(i)
+      error_sum += error
+      if( abs(error) > .0005 ) {
+		for( l <- (1 to count_layers - 1).reverse ){
+		  val neurons = layers(l).neurons
+          for( n <- 0 to neurons.length - 1 ){
+			if( !( l == count_layers - 1 && n != i ) ){
+			  val neuron = neurons(n)
+              for( bond <- 0 to neuron.last_inputs.length - 1 ){
+				layers(l).neurons(n).weights(bond) += learning_rate * error_sum * neuron.last_inputs(bond) * neuron.output *
 ( 1 - neuron.output )
-                  	  }
-                  	  layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
-		  	}
-          	  }
+              }
+              layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
+			}
+		  }
 		}
-          }
-        }
+	  }
+    }
 	/*for( i <- 0 to current_outputs.length - 1 ){
 	  error_sum = expected_outputs(i) - current_outputs(i)
 	}
-	
+
 	for( l <- (1 to count_layers - 1).reverse ){
 	  val neurons = layers(l).neurons
 	  for( n <- 0 to neurons.length - 1 ){
@@ -110,7 +110,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 		layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
 	  }
 	}*/
-	println( "Error: " + error_sum )
+	error_sum
   }
 
   def train(times: Int, in_out: Map[Array[Double],Array[Double]]) {
@@ -121,21 +121,34 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 	}
   }
 
+  def train(error_max: Double, in_out: Map[Array[Double],Array[Double]]) {
+	var error:Double = error_max+1
+	var count = 0
+	while( error > error_max ) {
+	  count += 1
+	  error = 0.0
+	  for( (k,v) <- in_out ) {
+		error += abs( parse( k, v ) )
+	  }
+	  println( "Test " + count + ": " + error )
+	}
+  }
+
   def truth_table() {
 	val n = neurons_per_layer(0)
 	val o = neurons_per_layer(neurons_per_layer.length - 1)
-	
+
 	println( "_" * (n * 2 + o * 3 + 1) )
 	print( "|" )
 	for( i <- 0 to n - 1 ) {
 	  print( i + "|" )
 	}
-	
+
 	for( i <- 0 to o - 1 ) {
 	  print( "O" + i + "|" )
 	}
 	print( "\n" )
-	
+
 	for( r <- 0 to 2^n - 1 ) {
 	  val bin = (("%" + n + "s") format r.toBinaryString).replace(' ', '0')
 	  var in = new Array[Double](n)
@@ -152,7 +165,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 
 	  print( "|\n" )
 	}
-	
+
 	println( "-" * (n * 2 + o * 3 + 1) )
   }
 }
