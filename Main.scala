@@ -13,11 +13,18 @@ object Main {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-	var xor = new NeuralNetwork( Array( 2, 3, 1 ) );
 	time {
-	  xor.train( 10000, Map( Array(0.0,1.0)->Array(1.0),Array(1.0,0.0)->Array(1.0),Array(1.0,1.0)->Array(0.0),Array(0.0,0.0)->Array(0.0)))
+	  var n_six = new NeuralNetwork( Array( 25, 1000, 1000, 1000, 1 ) )
+	  val zero = Array[Double](0,1,1,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,1,1,0)
+	  val one = Array[Double](0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0)
+	  val t = Array(1.0)
+	  val f = Array(0.0)
+	  n_six.learning_rate = .5
+	  n_six.train( 1000, Map( zero->t, one->f ) )
+	  time {
+		println( n_six.get_output(zero)(0) + " | " + n_six.get_output(one)(0) )
+	  }
+	  n_six.killNeurons
 	}
-	xor.truth_table
-	xor.killNeurons
   }
 }

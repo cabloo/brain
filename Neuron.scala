@@ -19,6 +19,11 @@ class Neuron(var weights: Array[Double]) extends Actor {
 	  output += bias_weight
 	  output = 1.0 / ( 1.0 + exp( -output ) )
 	  reply(output)
+	case err: Double =>
+	  for( bond <- 0 until last_inputs.length ){
+		weights(bond) += err * last_inputs(bond) * output * ( 1 - output )
+	  }
+	  bias_weight += err * output * ( 1 - output )
 	case _ => exit()
   }}}
 }

@@ -16,6 +16,8 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
   var error_sum = 0.0
   //Build the network
 
+  System.setProperty("actors.maxPoolSize", "10000")
+
   for( i <- 0 until count_layers ){
 	layers(i) = new NeuronLayer
 	val len = if( i > 0 ) layers(i-1).neurons.length else 0
@@ -88,9 +90,9 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 		  futures(neuron) = layers(layer).neurons(neuron) !! current_outputs
 		//}
 	  }
-	  //awaitAll(100000000,futures: _*)
+		//awaitAll(100000000,futures: _*)
 	  for( neuron <- 0 until l ){
-		new_outputs(neuron) = futures(neuron)().asInstanceOf[Double]
+	    new_outputs(neuron) = futures(neuron)().asInstanceOf[Double]
 	  }
 
 	  current_outputs = new_outputs
@@ -110,12 +112,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 		  val neurons = layers(l).neurons
           for( n <- 0 until neurons.length ){
 			if( !( l == count_layers - 1 && n != i ) ){
-			  val neuron = neurons(n)
-              for( bond <- 0 until neuron.last_inputs.length ){
-				layers(l).neurons(n).weights(bond) += learning_rate * error_sum * neuron.last_inputs(bond) * neuron.output *
-( 1 - neuron.output )
-              }
-              layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
+			  layers(l).neurons(n) ! learning_rate * error_sum
 			}
 		  }
 		}
