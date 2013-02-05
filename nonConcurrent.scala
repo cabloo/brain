@@ -177,7 +177,7 @@ object Main {
 	  val t = Array(1.0)
 	  val f = Array(0.0)
 	  n_six.learning_rate = .5
-	  n_six.train( 1000, Map( zero->t, one->f ) )
+	  //n_six.train( 1000, Map( zero->t, one->f ) )
 	  time {
 		println( n_six.get_output(zero)(0) + " | " + n_six.get_output(one)(0) )
 	  }

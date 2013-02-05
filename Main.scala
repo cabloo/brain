@@ -14,17 +14,23 @@ object Main {
    */
   def main(args: Array[String]): Unit = {
 	time {
-	  var n_six = new NeuralNetwork( Array( 25, 1000, 1000, 1000, 1 ) )
+	  /*var n_six = new NeuralNetwork( Array( 25, 1000, 100, 1 ) )
+	  //var n_six = new NeuralNetwork( Array( 25, 100, 1 ) )
 	  val zero = Array[Double](0,1,1,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,1,1,0)
-	  val one = Array[Double](0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0)
+	  val two = Array[Double](0,1,1,1,0,0,0,0,1,0,0,1,1,1,0,0,1,0,0,0,0,1,1,1,0)
 	  val t = Array(1.0)
-	  val f = Array(0.0)
-	  n_six.learning_rate = .5
-	  n_six.train( 1000, Map( zero->t, one->f ) )
+	  val f = Array(0.0)*/
+
+	  var xor = new NeuralNetwork( Array( 2, 3, 1 ) )
+	  xor.learning_rate = .5
+	  xor.train( 1000, Map( Array(0.0,0.0)->Array(0.0), Array(0.0,1.0)->Array(1.0), Array(1.0,0.0)->Array(1.0), Array(1.0,1.0)->Array(0.0) ))
+	  //n_six.learning_rate = .3
+	  //n_six.train( 100, Map( zero->t, two->f ) )
 	  time {
-		println( n_six.get_output(zero)(0) + " | " + n_six.get_output(one)(0) )
+		//println( n_six.get_output(zero)(0) + " | " + n_six.get_output(two)(0) )
+		xor.truth_table()
 	  }
-	  n_six.killNeurons
+	  xor.killNeurons
 	}
   }
 }
