@@ -6,12 +6,14 @@ import scala.actors.Future
 import scala.actors.Futures._
 import scala.actors.Actor
 import scala.actors.Actor._
+import scala.actors.remote._
+import scala.actors.remote.RemoteActor._
 
 class NeuralNetwork(neurons_per_layer: Array[Int]) {
   var inputs = Array[Double]()
   var expected_outputs = Array[Double]()
   val count_layers = neurons_per_layer.length
-  var layers = new Array[NeuronLayer](count_layers)
+  var layers = new Array[Array[String]](count_layers)
   var learning_rate = .3
   var error_sum = 0.0
   //Build the network
@@ -19,7 +21,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
   System.setProperty("actors.maxPoolSize", "10000")
 
   for( i <- count_layers - 1 to 0 by -1  ){
-	layers(i) = new NeuronLayer
+	var new_arr = new Array[String](neurons_per_layer(i))
 	val len = if( i > 0 ) neurons_per_layer(i-1) else 0
 	for( j <- 0 until neurons_per_layer(i) ) {
 	  var weights = Array[Double]()
@@ -30,8 +32,11 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 		}
 	  }
 
-	  layers(i).add(new Neuron(weights,if( i == count_layers - 1 ) new NeuronLayer else layers(i+1) ))
+	  val neuron = new Neuron(weights,i + "-" + j,if( i == count_layers - 1 ) new Array[String](0) else layers(i+1))
+	  neuron.start
+	  new_arr(j) = i + "-" + j
 	}
+	layers(i) = new_arr
   }
 
   startNeurons
@@ -43,26 +48,52 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 	ret
   }
 
+  def getNeuron(layer: Int,position: Int) = {
+	select(Node("127.0.0.1",8000),Symbol(layers(layer)(position)))
+  }
+
+  def getState(layer: Int,position: Int): String = {
+	getNeuron(layer,position) !? GetState() match {
+	  case Some(state: String) => state
+	}
+  }
+
+  def isComputed(layer: Int,position: Int): Boolean = {
+	getNeuron(layer,position) !? IsComputed() match {
+	  case b: Boolean => b
+	}
+  }
+
+  def isUpdated(layer: Int,position: Int): Boolean = {
+	getNeuron(layer,position) !? IsUpdated() match {
+	  case b: Boolean => b
+	}
+  }
+
+  def startComputing(layer: Int, position: Int) {
+	getNeuron(layer,position) ! StartComputing()
+  }
+
   def startNeurons(){
 	for( layer <- 0 until count_layers ){
-	  for( neuron <- 0 until layers(layer).neurons.length ){
-		layers(layer).neurons(neuron).getState match {
-		  case Actor.State.Terminated => layers(layer).neurons(neuron).restart
-		  case Actor.State.New => layers(layer).neurons(neuron).start
+	  for( neuron <- 0 until layers(layer).length ){
+		/*getState(layer,neuron) match {
+		  case "Terminated" => getNeuron(layer,neuron).restart
+		  case "New" => getNeuron(layer,neuron).start
 		  case _ => //Still running
-		}
+		}*/
 	  }
 	}
   }
 
   def killNeurons(){
 	for( layer <- 0 until count_layers ){
-	  for( neuron <- 0 until layers(layer).neurons.length ){
-		layers(layer).neurons(neuron).getState match {
-		  case Actor.State.Terminated =>
-		  case Actor.State.New =>
-		  case _ => layers(layer).neurons(neuron) ! None
-		}
+	  for( neuron <- 0 until layers(layer).length ){
+		/*getState(layer,neuron) match {
+		  case "Terminated" =>
+		  case "New" =>
+		  case _ => getNeuron(layer,neuron) ! None
+		}*/
 	  }
 	}
   }
@@ -75,7 +106,7 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 
   def still_computing(): Boolean = {
 	for( neuron <- 0 until neurons_per_layer(layers.length - 1) ){
-	  if( !layers(layers.length-1).neurons(neuron).is_computed ) return true
+	  if( !isComputed(layers.length-1,neuron) ) return true
 	}
 
 	return false
@@ -83,19 +114,18 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 
   def start_computing() {
 	for( neuron <- 0 until neurons_per_layer(layers.length - 1) ){
-	  layers(layers.length-1).neurons(neuron).is_computed = false
+	  startComputing(layers.length-1,neuron)
 	}
   }
 
   def get_output(in: Array[Double]): Array[Double] = {
 	val llc = neurons_per_layer(layers.length - 1)
 	var current_outputs = Array[Double](llc)
-
 	for( layer <- 0 until layers.length )
 	  while( still_updating(layer) ){}
 
 	for( neuron <- 0 until neurons_per_layer(0) ){
-	  layers(0).neurons(neuron) ! NewInput( in(neuron) )
+	  getNeuron(0,neuron) ! NewInput( in(neuron) )
 	}
 
 	start_computing
@@ -106,22 +136,24 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 	awaitAll( 10000, f )
 
 	for( neuron <- 0 until llc ){
-	  current_outputs(neuron) = layers(layers.length-1).neurons(neuron).output
+	  current_outputs(neuron) = getNeuron(layers.length-1,neuron) !? GetOutput() match {
+		case output: Double => output
+	  }
 	}
 
 	/*for( layer <- 1 until count_layers ){
-	  val l = layers(layer).neurons.length
+	  val l = layers(layer).length
 	  var futures = new Array[Future[Any]](l)
 	  var new_outputs = new Array[Double](l)
 	  for( neuron <- 0 until l ){
-		/*layers(layer).neurons(neuron).getState match {
-		  case Actor.State.Terminated => layers(layer).neurons(neuron).restart
-		  case Actor.State.New => layers(layer).neurons(neuron).start
+		/*getState(layer,neuron) match {
+		  case Actor.State.Terminated => getNeuron(layer,neuron).restart
+		  case Actor.State.New => getNeuron(layer,neuron).start
 		  case _ => println( "Still Running!?" )
 		}*/
 		//time {
-		  //layers(layer).neurons(neuron).start
-		  futures(neuron) = layers(layer).neurons(neuron) !! current_outputs
+		  //getNeuron(layer,neuron).start
+		  futures(neuron) = getNeuron(layer,neuron) !! current_outputs
 		//}
 	  }
 		//awaitAll(100000000,futures: _*)
@@ -136,8 +168,8 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 
   def still_updating(i: Int): Boolean = {
 	for( l <- 1 until count_layers ){
-	  for( n <- 0 until layers(l).neurons.length ){
-		if( !( l == count_layers - 1 && n != i ) && !layers(l).neurons(n).is_updated ) return true
+	  for( n <- 0 until layers(l).length ){
+		//if( !isUpdated(l,n) ) return true
 	  }
 	}
 
@@ -147,16 +179,14 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
   def parse(): Double = {
 	val current_outputs = get_output( inputs )
 	error_sum = 0.0
-	println( "Updating!" )
 
 	for( i <- 0 until current_outputs.length ){
 	  val error = expected_outputs(i) - current_outputs(i)
       error_sum += error
       for( l <- (1 until count_layers).reverse ){
-		for( n <- 0 until layers(l).neurons.length ){
+		for( n <- 0 until layers(l).length ){
 		  //if( !( l == count_layers - 1 && n != i ) ){
-		    layers(l).neurons(n).is_updated = false
-		    layers(l).neurons(n) ! UpdateError( learning_rate * error )
+		    getNeuron(l,n) ! UpdateError( learning_rate * error )
 		  //}
 		}
 	  }
@@ -166,13 +196,13 @@ class NeuralNetwork(neurons_per_layer: Array[Int]) {
 	}
 
 	for( l <- (1 until count_layers).reverse ){
-	  val neurons = layers(l).neurons
+	  val neurons = layers(l)
 	  for( n <- 0 until neurons.length ){
 		val neuron = neurons(n)
 		for( bond <- 0 until neuron.last_inputs.length ){
-		  layers(l).neurons(n).weights(bond) += learning_rate * error_sum * neuron.last_inputs(bond) * neuron.output * ( 1 - neuron.output )
+		  getNeuron(l,n).weights(bond) += learning_rate * error_sum * neuron.last_inputs(bond) * neuron.output * ( 1 - neuron.output )
 		}
-		layers(l).neurons(n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
+		getNeuron(l,n).bias_weight += learning_rate * error_sum * neuron.output * ( 1 - neuron.output )
 	  }
 	}*/
 	error_sum

@@ -23,7 +23,7 @@ object Main {
 
 	  var xor = new NeuralNetwork( Array( 2, 3, 1 ) )
 	  xor.learning_rate = .5
-	  xor.train( 1000, Map( Array(0.0,0.0)->Array(0.0), Array(0.0,1.0)->Array(1.0), Array(1.0,0.0)->Array(1.0), Array(1.0,1.0)->Array(0.0) ))
+	  xor.train( 100, Map( Array(0.0,0.0)->Array(0.0), Array(0.0,1.0)->Array(1.0), Array(1.0,0.0)->Array(1.0), Array(1.0,1.0)->Array(0.0) ))
 	  //n_six.learning_rate = .3
 	  //n_six.train( 100, Map( zero->t, two->f ) )
 	  time {
